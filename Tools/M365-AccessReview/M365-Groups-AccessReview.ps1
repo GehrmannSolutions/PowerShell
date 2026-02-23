@@ -20,7 +20,8 @@
     - Module: Microsoft.Graph, Microsoft.Online.SharePoint.PowerShell, MicrosoftTeams
 
 .AUTHOR
-    Erstellt für M365 Access Review
+    Marius Gehrmann - marius@gehrmann.io
+    
 #>
 
 #Requires -RunAsAdministrator
