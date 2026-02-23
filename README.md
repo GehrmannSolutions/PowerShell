@@ -9,7 +9,7 @@ PowerShell/
 ├── Intune-DriverInjection/                       Druckertreiber-Deployment via Intune
 ├── Tools/
 │   ├── M365-AccessReview/                        M365 Gruppen & Berechtigungs-Audit
-│   └── SharePoint-managerAccessforPersonalSites/ OneDrive-Zugriff fuer Vorgesetzte
+│   └── SharePoint-OneDriveManagerAccess/         OneDrive-Zugriff fuer Vorgesetzte
 └── README.md
 ```
 
@@ -49,16 +49,16 @@ Prueft in einem Durchlauf:
 
 ---
 
-### [SharePoint-managerAccessforPersonalSites](Tools/SharePoint-managerAccessforPersonalSites/)
+### [SharePoint-OneDriveManagerAccess](Tools/SharePoint-OneDriveManagerAccess/)
 
 Gibt einem Manager Site-Collection-Admin-Zugriff auf die OneDrive-Site eines Benutzers (z.B. nach Austritt eines Mitarbeiters).
 
 ```powershell
 # Zugriff gewaehren
-.\Set-ManagerAccessforPersonalSites.ps1 -AdminUrl "https://contoso-admin.sharepoint.com" -UserUPN "user@contoso.com" -ManagerUPN "chef@contoso.com"
+.\Set-OneDriveManagerAccess.ps1 -AdminUrl "https://contoso-admin.sharepoint.com" -UserUPN "user@contoso.com" -ManagerUPN "chef@contoso.com"
 
 # Zugriff entziehen
-.\Set-ManagerAccessforPersonalSites.ps1 -AdminUrl "https://contoso-admin.sharepoint.com" -UserUPN "user@contoso.com" -ManagerUPN "chef@contoso.com" -Remove
+.\Set-OneDriveManagerAccess.ps1 -AdminUrl "https://contoso-admin.sharepoint.com" -UserUPN "user@contoso.com" -ManagerUPN "chef@contoso.com" -Remove
 ```
 
 **Features:** WhatIf-Support, UPN-Validierung, automatische Modul-Installation
@@ -71,7 +71,7 @@ Gibt einem Manager Site-Collection-Admin-Zugriff auf die OneDrive-Site eines Ben
 |---|---|---|---|
 | Intune-DriverInjection | 5.1+ | SYSTEM (via Intune) | Keine |
 | M365-AccessReview | 5.1+ (Admin) | Global Admin | Microsoft.Graph, MicrosoftTeams |
-| SharePoint-managerAccess | 5.1 (ISE) | SharePoint Admin | Microsoft.Online.SharePoint.PowerShell |
+| SharePoint-OneDriveManagerAccess | 5.1 (ISE) | SharePoint Admin | Microsoft.Online.SharePoint.PowerShell |
 
 ## Konventionen
 

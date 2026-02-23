@@ -21,10 +21,10 @@
     Entfernt den Manager-Zugriff anstatt ihn zu setzen.
 
 .EXAMPLE
-    .\Set-ManagerAccessforPersonalSites.ps1 -AdminUrl "https://contoso-admin.sharepoint.com" -UserUPN "max.mustermann@contoso.com" -ManagerUPN "chef@contoso.com"
+    .\Set-OneDriveManagerAccess.ps1 -AdminUrl "https://contoso-admin.sharepoint.com" -UserUPN "max.mustermann@contoso.com" -ManagerUPN "chef@contoso.com"
 
 .EXAMPLE
-    .\Set-ManagerAccessforPersonalSites.ps1 -AdminUrl "https://contoso-admin.sharepoint.com" -UserUPN "max.mustermann@contoso.com" -ManagerUPN "chef@contoso.com" -Remove
+    .\Set-OneDriveManagerAccess.ps1 -AdminUrl "https://contoso-admin.sharepoint.com" -UserUPN "max.mustermann@contoso.com" -ManagerUPN "chef@contoso.com" -Remove
 
 .NOTES
     Erfordert:

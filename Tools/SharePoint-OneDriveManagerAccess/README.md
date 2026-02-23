@@ -1,4 +1,4 @@
-# Set-ManagerAccessforPersonalSites
+# Set-OneDriveManagerAccess
 
 Gibt einem Manager Site-Collection-Admin-Zugriff auf die OneDrive-for-Business-Site eines Benutzers.
 
@@ -17,19 +17,19 @@ Ein Mitarbeiter verlaesst das Unternehmen oder ist laengerfristig abwesend. Der 
 ### Zugriff gewaehren
 
 ```powershell
-.\Set-ManagerAccessforPersonalSites.ps1 -AdminUrl "https://contoso-admin.sharepoint.com" -UserUPN "max.mustermann@contoso.com" -ManagerUPN "chef@contoso.com"
+.\Set-OneDriveManagerAccess.ps1 -AdminUrl "https://contoso-admin.sharepoint.com" -UserUPN "max.mustermann@contoso.com" -ManagerUPN "chef@contoso.com"
 ```
 
 ### Zugriff wieder entziehen
 
 ```powershell
-.\Set-ManagerAccessforPersonalSites.ps1 -AdminUrl "https://contoso-admin.sharepoint.com" -UserUPN "max.mustermann@contoso.com" -ManagerUPN "chef@contoso.com" -Remove
+.\Set-OneDriveManagerAccess.ps1 -AdminUrl "https://contoso-admin.sharepoint.com" -UserUPN "max.mustermann@contoso.com" -ManagerUPN "chef@contoso.com" -Remove
 ```
 
 ### Dry-Run (WhatIf)
 
 ```powershell
-.\Set-ManagerAccessforPersonalSites.ps1 -AdminUrl "https://contoso-admin.sharepoint.com" -UserUPN "max.mustermann@contoso.com" -ManagerUPN "chef@contoso.com" -WhatIf
+.\Set-OneDriveManagerAccess.ps1 -AdminUrl "https://contoso-admin.sharepoint.com" -UserUPN "max.mustermann@contoso.com" -ManagerUPN "chef@contoso.com" -WhatIf
 ```
 
 ## Parameter
