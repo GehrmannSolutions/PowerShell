@@ -1,10 +1,11 @@
 <#
 .SYNOPSIS
-    Hebt die BitLocker-Verschluesselung auf dem Systemlaufwerk auf.
+    Hebt die BitLocker-Verschluesselung auf allen Laufwerken auf.
 
 .DESCRIPTION
-    Deaktiviert BitLocker auf C: und startet die Entschluesselung.
-    Der Vorgang laeuft im Hintergrund weiter, auch nach Neustart.
+    Deaktiviert BitLocker auf allen verschluesselten Laufwerken und startet
+    die Entschluesselung. Der Vorgang laeuft im Hintergrund weiter, auch
+    nach Neustart.
 
 .NOTES
     Author: Marius Gehrmann - Business IT Solutions
@@ -13,25 +14,38 @@
 
 .RELEASE NOTES
     V1.0, 24.02.2026 - Erstversion
+    V1.1, 26.02.2026 - Alle Laufwerke entschluesseln, nicht nur C:
 #>
 
 try {
-    $bitlockerVolume = Get-BitLockerVolume -MountPoint "C:" -ErrorAction Stop
+    $allVolumes = Get-BitLockerVolume -ErrorAction Stop
 
-    if ($bitlockerVolume.VolumeStatus -eq "FullyDecrypted") {
-        Write-Host "BitLocker ist bereits deaktiviert auf C:."
+    $encryptedVolumes = $allVolumes | Where-Object {
+        $_.VolumeStatus -notin "FullyDecrypted", "DecryptionInProgress"
+    }
+
+    if (-not $encryptedVolumes) {
+        Write-Host "Kein Laufwerk erfordert Entschluesselung."
         exit 0
     }
 
-    if ($bitlockerVolume.VolumeStatus -eq "DecryptionInProgress") {
-        Write-Host "Entschluesselung laeuft bereits auf C: ($($bitlockerVolume.EncryptionPercentage)% noch verschluesselt)."
-        exit 0
+    $errors = @()
+
+    foreach ($volume in $encryptedVolumes) {
+        try {
+            Disable-BitLocker -MountPoint $volume.MountPoint -ErrorAction Stop
+            Write-Host "Entschluesselung gestartet auf $($volume.MountPoint)"
+        }
+        catch {
+            $errors += "$($volume.MountPoint): $($_.Exception.Message)"
+        }
     }
 
-    # BitLocker deaktivieren und Entschluesselung starten
-    Disable-BitLocker -MountPoint "C:" -ErrorAction Stop
+    if ($errors) {
+        Write-Host "Fehler bei: $($errors -join '; ')"
+        exit 1
+    }
 
-    Write-Host "BitLocker-Entschluesselung wurde gestartet auf C:."
     exit 0
 }
 catch {

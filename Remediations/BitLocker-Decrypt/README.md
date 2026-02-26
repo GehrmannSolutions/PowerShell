@@ -1,21 +1,21 @@
 # BitLocker-Decrypt Remediation
 
-Intune Proactive Remediation zum Aufheben der BitLocker-Verschluesselung auf dem Systemlaufwerk (C:).
+Intune Proactive Remediation zum Aufheben der BitLocker-Verschluesselung auf allen Laufwerken.
 
 ## Skripte
 
 | Datei | Zweck |
 |---|---|
-| `Detect-BitlockerEncryption.ps1` | Prueft ob BitLocker auf C: aktiv ist |
-| `Remediate-BitlockerEncryption.ps1` | Deaktiviert BitLocker und startet die Entschluesselung |
+| `Detect-BitlockerEncryption.ps1` | Prueft ob BitLocker auf einem Laufwerk aktiv ist |
+| `Remediate-BitlockerEncryption.ps1` | Deaktiviert BitLocker und startet die Entschluesselung auf allen verschluesselten Laufwerken |
 
 ## Detection-Logik
 
 | Status | Exit Code | Aktion |
 |---|---|---|
-| Nicht verschluesselt | 0 | Keine |
-| Entschluesselung laeuft | 0 | Keine |
-| Verschluesselt | 1 | Remediation wird ausgeloest |
+| Kein Laufwerk verschluesselt | 0 | Keine |
+| Entschluesselung laeuft bereits | 0 | Keine |
+| Mindestens ein Laufwerk verschluesselt | 1 | Remediation wird ausgeloest |
 
 ## Intune-Konfiguration
 
