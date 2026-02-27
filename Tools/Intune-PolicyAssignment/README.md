@@ -90,20 +90,32 @@ die diese Lösung erst möglich gemacht hat.
 
 ## Was das Script macht
 
-Das Script lädt alle Policies aus drei Quellen:
+Das Script lädt alle Policies aus drei Quellen – und filtert dabei automatisch auf **Windows-Policies**:
 
-| Quelle | API-Endpunkt | Enthält |
-|--------|-------------|---------|
-| **Settings Catalog** | `deviceManagement/configurationPolicies` | Moderne Konfigurationspolicies inkl. neuer Endpoint Security |
-| **Device Configurations** | `deviceManagement/deviceConfigurations` | Klassische/Legacy Konfigurationsprofile |
-| **Endpoint Security Intents** | `deviceManagement/intents` | Ältere, Template-basierte Endpoint Security Policies |
+| Quelle | API-Endpunkt | Windows-Filter | Enthält |
+|--------|-------------|----------------|---------|
+| **Settings Catalog** | `deviceManagement/configurationPolicies` | `platforms -match 'windows'` | Moderne Konfigurationspolicies inkl. neuer Endpoint Security |
+| **Device Configurations** | `deviceManagement/deviceConfigurations` | `@odata.type -match 'windows'` | Klassische/Legacy Konfigurationsprofile |
+| **Endpoint Security Intents** | `deviceManagement/intents` | Template-Lookup: `platformType -match 'windows'` | Ältere, Template-basierte Endpoint Security Policies |
 
-Für jede Policy wird **interaktiv** abgefragt:
+Policies anderer Plattformen (macOS, iOS, Android, Linux) werden ignoriert.
 
-1. **Zuweisungsart** – All Users oder All Devices (mit Empfehlung, s.u.)
-2. **Assignment Filter** – Auswahl aus allen im Tenant vorhandenen Filtern
+Nach dem Laden wählt der Administrator einen **Bearbeitungsmodus**:
+
+| Modus | Beschreibung |
+|-------|-------------|
+| **[1] Manuell** | Zuweisungsart pro Policy selbst wählen, Filter-Auswahl pro Policy |
+| **[2] Auto** | Empfehlung automatisch anwenden, Filter-Auswahl pro Policy |
+| **[3] Auto+** | Empfehlung automatisch anwenden, ohne Filter-Auswahl (schnellster Modus) |
+
+In allen Modi kann jede einzelne Policy mit **[S]** übersprungen werden.
+
+Für jede Policy wird (je nach Modus) abgefragt:
+
+1. **Zuweisungsart** – All Users oder All Devices (immer mit Empfehlung angezeigt)
+2. **Assignment Filter** – Auswahl aus allen im Tenant vorhandenen Filtern (entfällt bei Auto+)
 3. **Filter-Typ** – Include oder Exclude
-4. **Bestätigung** – Zusammenfassung vor dem Schreiben
+4. **Bestätigung** – Zusammenfassung vor dem Schreiben (entfällt im Auto-Modus)
 
 Am Ende wird ein **CSV-Protokoll** aller vorgenommenen Änderungen gespeichert.
 
@@ -120,6 +132,7 @@ und Policy-Name:
 | Endpoint Security Disk Encryption | **All Devices** | BitLocker muss vor dem User Login aktiv sein |
 | Endpoint Security Intents (Legacy) | **All Users** | Gleiches Reboot-Risiko wie neue ES-Policies |
 | Name enthält `Update`, `WUfB`, `Windows Update` | **All Users** | Update-Policies setzen regelmäßig RebootRequired |
+| Name enthält `DomainJoin`, `Domain Join`, `HybridJoin`, `HAADJ` | **All Devices** | Hybrid Entra Join muss in der Device Phase konfiguriert werden – zwingend vor dem User Login |
 | Name enthält `BitLocker`, `Encryption`, `Verschlüsselung` | **All Devices** | Muss vor dem User Login greifen |
 | Name enthält `WiFi`, `VPN`, `SCEP`, `PKCS`, `Certificate` | **All Devices** | Netzwerk/Zertifikate werden in der Device Phase benötigt |
 | Alles andere | **All Users** | Vorsichtsempfehlung für sicheres Autopilot-Deployment |
@@ -157,6 +170,28 @@ Das Script benötigt folgende Delegated Permissions (interaktiver Login):
 ```powershell
 .\Set-IntunePolicyAssignment.ps1
 ```
+
+Das Script fragt nach dem Laden zunächst, ob alle gefundenen Windows-Policies bearbeitet
+werden sollen. Danach wird der **Bearbeitungsmodus** gewählt:
+
+```
+  Zuweisungsart-Modus:
+  [1] Manuell – Zuweisungsart pro Policy selbst wählen
+  [2] Auto    – Empfehlung automatisch anwenden, Filter pro Policy abfragen
+  [3] Auto+   – Empfehlung automatisch anwenden, ohne Filter (schnellster Modus)
+```
+
+**Manuell [1]** – Klassischer interaktiver Modus: Pro Policy Zuweisungsart wählen, Filter
+auswählen und explizit mit J/N bestätigen.
+
+**Auto [2]** – Das Script wendet die berechnete Empfehlung automatisch an. Pro Policy wird
+nur noch der optionale Assignment Filter abgefragt. Mit `[Enter]` bestätigen oder `[S]`
+zum Überspringen.
+
+**Auto+ [3]** – Schnellster Modus: Empfehlung wird sofort gesetzt, keine Filter-Auswahl.
+Nur `[Enter]` oder `[S]` pro Policy nötig. Geeignet für schnelle Massenneuzuweisung.
+
+---
 
 ### Nur Endpoint Security Policies
 

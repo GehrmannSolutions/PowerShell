@@ -225,6 +225,15 @@ function Get-Empfehlung {
         }
     }
 
+    # Domain Join (Hybrid Entra Join) → muss in der Device Phase greifen
+    if ($PolicyName -match "DomainJoin|Domain.?Join|HybridJoin|Hybrid.?Join|HAADJ|Domain Join") {
+        return @{
+            Empfehlung   = "AllDevices"
+            Begruendung  = "Domain Join Policies konfigurieren den Hybrid Entra Join und müssen in der Device Phase aktiv sein – vor dem User Login. All Devices ist zwingend erforderlich."
+            Symbol       = "⚠"
+        }
+    }
+
     # BitLocker / Verschlüsselung → muss vor User Login aktiv sein
     if ($PolicyName -match "BitLocker|Encryption|Verschlüsselung|Laufwerk") {
         return @{
@@ -328,12 +337,13 @@ function Invoke-PolicyBearbeitung {
         [array]$AvailableFilter,
         [hashtable]$Stats,
         [int]$AktuellerIndex,
-        [int]$Gesamt
+        [int]$Gesamt,
+        [string]$AutoModus = "Manuell"   # "Manuell" | "EmpfehlungMitFilter" | "EmpfehlungOhneFilter"
     )
 
     $empfehlung = Get-Empfehlung `
-        -PolicyType    $Policy.PolicyType `
-        -PolicyName    $Policy.displayName `
+        -PolicyType     $Policy.PolicyType `
+        -PolicyName     $Policy.displayName `
         -TemplateFamily ($Policy.TemplateFamily ?? "")
 
     Write-Host ""
@@ -363,40 +373,66 @@ function Invoke-PolicyBearbeitung {
     Write-Host $empfehlung.Empfehlung -ForegroundColor $empfSymbolFarbe
     Write-Host "    $($empfehlung.Begruendung)" -ForegroundColor DarkGreen
 
-    # Zuweisungsart abfragen
-    Write-Host ""
-    $empfUsersLabel   = if ($empfehlung.Empfehlung -eq "AllUsers")   { " ← Empfohlen" } else { "" }
-    $empfDevicesLabel = if ($empfehlung.Empfehlung -eq "AllDevices") { " ← Empfohlen" } else { "" }
+    # ── ZUWEISUNGSART ───────────────────────────────────────────────────────
+    $zuweisungTyp = $null
 
-    Write-Host "  Neue Zuweisungsart:" -ForegroundColor White
-    Write-Host "  [1] All Users$empfUsersLabel"   -ForegroundColor $(if ($empfehlung.Empfehlung -eq "AllUsers")   { "Green" } else { "White" })
-    Write-Host "  [2] All Devices$empfDevicesLabel" -ForegroundColor $(if ($empfehlung.Empfehlung -eq "AllDevices") { "Yellow" } else { "White" })
-    Write-Host "  [S] Überspringen" -ForegroundColor DarkYellow
-    Write-Host ""
+    if ($AutoModus -eq "Manuell") {
+        # Manuelle Auswahl
+        Write-Host ""
+        $empfUsersLabel   = if ($empfehlung.Empfehlung -eq "AllUsers")   { " ← Empfohlen" } else { "" }
+        $empfDevicesLabel = if ($empfehlung.Empfehlung -eq "AllDevices") { " ← Empfohlen" } else { "" }
 
-    $auswahl = Read-Host "  Auswahl"
+        Write-Host "  Neue Zuweisungsart:" -ForegroundColor White
+        Write-Host "  [1] All Users$empfUsersLabel"    -ForegroundColor $(if ($empfehlung.Empfehlung -eq "AllUsers")   { "Green" } else { "White" })
+        Write-Host "  [2] All Devices$empfDevicesLabel" -ForegroundColor $(if ($empfehlung.Empfehlung -eq "AllDevices") { "Yellow" } else { "White" })
+        Write-Host "  [S] Überspringen" -ForegroundColor DarkYellow
+        Write-Host ""
 
-    if ($auswahl -in @("S", "s")) {
-        Write-ColorOutput "  → Übersprungen." "Warnung"
-        $Stats.Uebersprungen++
-        return
+        $auswahl = Read-Host "  Auswahl"
+
+        if ($auswahl -in @("S", "s")) {
+            Write-ColorOutput "  → Übersprungen." "Warnung"
+            $Stats.Uebersprungen++
+            return
+        }
+
+        $zuweisungTyp = switch ($auswahl) {
+            "1" { "AllUsers" }
+            "2" { "AllDevices" }
+            default {
+                Write-ColorOutput "  Ungültige Eingabe – übersprungen." "Warnung"
+                $Stats.Uebersprungen++
+                return
+            }
+        }
     }
+    else {
+        # Auto-Modus: Empfehlung direkt übernehmen, [S] zum Überspringen
+        $zuweisungTyp   = $empfehlung.Empfehlung
+        $autoFarbe      = if ($zuweisungTyp -eq "AllUsers") { "Green" } else { "Yellow" }
+        Write-Host ""
+        Write-Host "  → Auto: Zuweisung wird als " -ForegroundColor DarkGray -NoNewline
+        Write-Host $zuweisungTyp -ForegroundColor $autoFarbe -NoNewline
+        Write-Host " gesetzt." -ForegroundColor DarkGray
+        Write-Host "  [S] zum Überspringen dieser Policy." -ForegroundColor DarkYellow
+        Write-Host ""
 
-    $zuweisungTyp = switch ($auswahl) {
-        "1" { "AllUsers" }
-        "2" { "AllDevices" }
-        default {
-            Write-ColorOutput "  Ungültige Eingabe – übersprungen." "Warnung"
+        $skipCheck = Read-Host "  Weiter? [Enter / S]"
+        if ($skipCheck -in @("S", "s")) {
+            Write-ColorOutput "  → Übersprungen." "Warnung"
             $Stats.Uebersprungen++
             return
         }
     }
 
-    # Filter abfragen
+    # ── FILTER ──────────────────────────────────────────────────────────────
     $gewaehlterFilter = $null
     $filterTyp        = "none"
 
-    if ($AvailableFilter.Count -gt 0) {
+    if ($AutoModus -eq "EmpfehlungOhneFilter") {
+        # Kein Filter im schnellen Auto-Modus
+    }
+    elseif ($AvailableFilter.Count -gt 0) {
         $gewaehlterFilter = Show-FilterAuswahl -Filter $AvailableFilter
 
         if ($gewaehlterFilter) {
@@ -416,7 +452,7 @@ function Invoke-PolicyBearbeitung {
         Write-ColorOutput "  Keine Assignment Filter vorhanden – Zuweisung ohne Filter." "Warnung"
     }
 
-    # Zusammenfassung
+    # ── ZUSAMMENFASSUNG ─────────────────────────────────────────────────────
     Write-Host ""
     Write-Host ("  ┌─ Zusammenfassung " + ("─" * 50)) -ForegroundColor DarkGray
     Write-Host "  │ Policy:    $($Policy.displayName)" -ForegroundColor White
@@ -428,15 +464,21 @@ function Invoke-PolicyBearbeitung {
     else {
         Write-Host "  │ Filter:    Kein Filter" -ForegroundColor DarkGray
     }
+
+    if ($AutoModus -ne "Manuell") {
+        Write-Host "  │ Modus:     Auto (Empfehlung)" -ForegroundColor DarkGray
+    }
     Write-Host ("  └" + ("─" * 67)) -ForegroundColor DarkGray
     Write-Host ""
 
-    $bestaetigung = Read-Host "  Zuweisung setzen? [J/N]"
-
-    if ($bestaetigung -notin @("J", "j")) {
-        Write-ColorOutput "  → Abgebrochen." "Warnung"
-        $Stats.Uebersprungen++
-        return
+    # Im Auto-Modus entfällt die explizite J/N-Bestätigung (wurde bereits per Enter/S quittiert)
+    if ($AutoModus -eq "Manuell") {
+        $bestaetigung = Read-Host "  Zuweisung setzen? [J/N]"
+        if ($bestaetigung -notin @("J", "j")) {
+            Write-ColorOutput "  → Abgebrochen." "Warnung"
+            $Stats.Uebersprungen++
+            return
+        }
     }
 
     # Zuweisung anwenden
@@ -551,63 +593,77 @@ if (-not $NurDeviceConfigurations -and -not $NurEndpointSecurity) {
     $selectFelder   = "`$select=id,name,description,platforms,technologies,templateReference"
     $configPolicies = @(Get-GraphAllPages -Uri "$GraphBaseUri/deviceManagement/configurationPolicies?$selectFelder")
 
-    foreach ($p in $configPolicies) {
-        $templateFamily = $p.templateReference?.templateFamily ?? ""
+    $windowsConfigPolicies = @($configPolicies | Where-Object { $_.platforms -match 'windows' })
+
+    foreach ($p in $windowsConfigPolicies) {
+        $templateFamily = $p['templateReference']?['templateFamily'] ?? ""
         $kategorie      = if ($templateFamily -like "endpointSecurity*") { "Endpoint Security (Settings Catalog)" } else { "Settings Catalog" }
 
         $allePolicies.Add(@{
-            id            = $p.id
-            displayName   = $p.name ?? "(kein Name)"
-            description   = $p.description ?? ""
+            id             = $p['id']
+            displayName    = $p['name'] ?? "(kein Name)"
+            description    = $p['description'] ?? ""
             TemplateFamily = $templateFamily
-            PolicyType    = "configurationPolicies"
-            Kategorie     = $kategorie
+            PolicyType     = "configurationPolicies"
+            Kategorie      = $kategorie
         })
     }
 
-    Write-ColorOutput "$($configPolicies.Count) Configuration Policies geladen." "Erfolg"
+    Write-ColorOutput "$($windowsConfigPolicies.Count) von $($configPolicies.Count) Configuration Policies sind Windows-Policies." "Erfolg"
 }
 
 # 2. Device Configurations (Legacy)
 if (-not $NurEndpointSecurity -and -not $NurConfigurationPolicies) {
     Write-ColorOutput "Lade Device Configurations (Legacy)..." "Info"
 
+    # @odata.type wird bei deviceConfigurations immer mitgeliefert (z.B. #microsoft.graph.windows10GeneralConfiguration)
     $selectFelder     = "`$select=id,displayName,description"
     $deviceConfigs    = @(Get-GraphAllPages -Uri "$GraphBaseUri/deviceManagement/deviceConfigurations?$selectFelder")
 
-    foreach ($p in $deviceConfigs) {
+    $windowsDeviceConfigs = @($deviceConfigs | Where-Object { $_['@odata.type'] -match 'windows' })
+
+    foreach ($p in $windowsDeviceConfigs) {
         $allePolicies.Add(@{
-            id            = $p.id
-            displayName   = $p.displayName ?? "(kein Name)"
-            description   = $p.description ?? ""
+            id             = $p['id']
+            displayName    = $p['displayName'] ?? "(kein Name)"
+            description    = $p['description'] ?? ""
             TemplateFamily = ""
-            PolicyType    = "deviceConfigurations"
-            Kategorie     = "Device Configuration (Legacy)"
+            PolicyType     = "deviceConfigurations"
+            Kategorie      = "Device Configuration (Legacy)"
         })
     }
 
-    Write-ColorOutput "$($deviceConfigs.Count) Device Configurations geladen." "Erfolg"
+    Write-ColorOutput "$($windowsDeviceConfigs.Count) von $($deviceConfigs.Count) Device Configurations sind Windows-Policies." "Erfolg"
 }
 
 # 3. Endpoint Security Intents (Legacy Template-basiert)
 if (-not $NurConfigurationPolicies -and -not $NurDeviceConfigurations) {
     Write-ColorOutput "Lade Endpoint Security Intents..." "Info"
 
+    # Template-Lookup für Plattformfilterung laden
+    $templateLookup = @{}
+    $templates = @(Get-GraphAllPages -Uri "$GraphBaseUri/deviceManagement/templates?`$select=id,platformType")
+    foreach ($t in $templates) {
+        $templateLookup[$t['id']] = $t['platformType'] ?? ""
+    }
+
     $selectFelder = "`$select=id,displayName,description,templateId"
     $intents      = @(Get-GraphAllPages -Uri "$GraphBaseUri/deviceManagement/intents?$selectFelder")
 
-    foreach ($p in $intents) {
+    $windowsIntents = @($intents | Where-Object { $templateLookup[$_['templateId']] -match 'windows' })
+
+    foreach ($p in $windowsIntents) {
         $allePolicies.Add(@{
-            id            = $p.id
-            displayName   = $p.displayName ?? "(kein Name)"
-            description   = $p.description ?? ""
+            id             = $p['id']
+            displayName    = $p['displayName'] ?? "(kein Name)"
+            description    = $p['description'] ?? ""
             TemplateFamily = ""
-            PolicyType    = "intents"
-            Kategorie     = "Endpoint Security (Intent)"
+            PolicyType     = "intents"
+            Kategorie      = "Endpoint Security (Intent)"
         })
     }
 
-    Write-ColorOutput "$($intents.Count) Endpoint Security Intents geladen." "Erfolg"
+    Write-ColorOutput "$($windowsIntents.Count) von $($intents.Count) Endpoint Security Intents sind Windows-Policies." "Erfolg"
 }
 
 # Sortieren: nach Kategorie, dann Name
@@ -624,11 +680,31 @@ if ($allePolicies.Count -eq 0) {
     exit 0
 }
 
-$bestaetigung = Read-Host "Alle $($allePolicies.Count) Policies einzeln bearbeiten? [J/N]"
+$bestaetigung = Read-Host "Alle $($allePolicies.Count) Windows-Policies einzeln bearbeiten? [J/N]"
 if ($bestaetigung -notin @("J", "j")) {
     Write-ColorOutput "Abgebrochen." "Warnung"
     exit 0
 }
+
+Write-Host ""
+Write-Host "  Zuweisungsart-Modus:" -ForegroundColor White
+Write-Host "  [1] Manuell – Zuweisungsart pro Policy selbst wählen" -ForegroundColor White
+Write-Host "  [2] Auto    – Empfehlung automatisch anwenden, Filter pro Policy abfragen" -ForegroundColor White
+Write-Host "  [3] Auto+   – Empfehlung automatisch anwenden, ohne Filter (schnellster Modus)" -ForegroundColor White
+Write-Host ""
+$modusEingabe = Read-Host "  Modus wählen [1]"
+
+$autoModus = switch ($modusEingabe) {
+    "2"     { "EmpfehlungMitFilter" }
+    "3"     { "EmpfehlungOhneFilter" }
+    default { "Manuell" }
+}
+
+if ($autoModus -ne "Manuell") {
+    Write-ColorOutput "  → Auto-Modus aktiv: Empfehlung wird pro Policy automatisch gesetzt." "Empfehlung"
+    Write-ColorOutput "    Mit [S] kann jede Policy übersprungen werden." "Empfehlung"
+}
+Write-Host ""
 
 # ============================================================================
 # INTERAKTIVE BEARBEITUNG
@@ -659,7 +735,8 @@ foreach ($policy in $allePolicies) {
         -AvailableFilter $alleFilter `
         -Stats           $stats `
         -AktuellerIndex  $index `
-        -Gesamt          $allePolicies.Count
+        -Gesamt          $allePolicies.Count `
+        -AutoModus       $autoModus
 }
 
 # ============================================================================

@@ -140,3 +140,7 @@ Beim ersten Start mit neuen Scopes muss ein Global Admin den Consent im Browser 
 ```
 https://entra.microsoft.com > Enterprise Applications > Microsoft Graph Command Line Tools > Permissions > Review permissions
 ```
+
+## Autor
+
+Marius Gehrmann - Business IT Solutions

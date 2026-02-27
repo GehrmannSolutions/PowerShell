@@ -92,3 +92,7 @@ Die SharePoint Admin URL laesst sich nicht zuverlaessig automatisch aus dem UPN 
 | PKCE + SPO-Modul im Kindprozess (PS 5.1) | SPO-Modul im Subprocess ebenfalls 400 |
 
 Die PKCE-Erkennung ueber Graph API hat technisch funktioniert. Das Problem lag immer beim SPO-Modul in PS7, nicht bei der URL-Erkennung. Da das SPO-Modul nur in PS 5.1 funktioniert und dort die manuelle URL-Eingabe zumutbar ist, wurde auf Auto-Erkennung verzichtet.
+
+## Autor
+
+Marius Gehrmann - Business IT Solutions
