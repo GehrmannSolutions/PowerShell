@@ -115,3 +115,17 @@ Bei ausstehendem Neustart oder fehlenden Updates wird eine **BurntToast Toast-No
 - Die Remediation laeuft im **SYSTEM-Kontext** und benoetigt keine Benutzerinteraktion ausser dem Neustart.
 - Preis: 61 USD/Geraet (Year 1), verdoppelt sich jaehrlich, max. 3 Jahre.
 - **Kostenlos** fuer Azure VMs, Windows 365, Azure Virtual Desktop.
+
+## Quellen (Microsoft)
+
+- [ESU-Programm (Extended Security Updates) fuer Windows 10](https://learn.microsoft.com/de-de/windows/whats-new/extended-security-updates) - Uebersicht, Preise, FAQ
+- [Enable Windows 10 Extended Security Updates (ESU)](https://learn.microsoft.com/en-us/windows/whats-new/enable-extended-security-updates) - Voraussetzungen, MAK-Key, Aktivierung per slmgr
+- [KB5066791 - Cumulative Update fuer Windows 10 22H2](https://support.microsoft.com/help/5066791) - Mindest-Update
+- [KB5072653 - ESU Licensing Preparation Package](https://support.microsoft.com/help/5072653) - Vorbereitungspaket fuer ESU-Lizenzierung
+- [Windows 10 End of Support](https://www.microsoft.com/windows/end-of-support) - Allgemeine Informationen zum Supportende
+- [Windows 10 Consumer ESU](https://www.microsoft.com/windows/extended-security-updates) - ESU fuer Privatpersonen
+- [When to use Windows 10 Extended Security Updates](https://techcommunity.microsoft.com/blog/windows-itpro-blog/when-to-use-windows-10-extended-security-updates/4102628) - Microsoft Tech Community Blog
+- [Volume Licensing Rollen (Product Key Reader / VL Administrator)](https://learn.microsoft.com/de-de/microsoft-365/commerce/licenses/manage-user-roles-vl) - Berechtigungen fuer MAK-Key Zugriff
+- [slmgr.vbs Optionen](https://learn.microsoft.com/en-us/windows-server/get-started/activation-slmgr-vbs-options) - Referenz fuer Software Licensing Management Tool
+- [VAMT Proxy Activation](https://learn.microsoft.com/en-us/windows/deployment/volume-activation/proxy-activation-vamt) - Massenaktivierung ohne Internet
+- [Windows Lifecycle FAQ](https://learn.microsoft.com/de-de/lifecycle/faq/windows) - Lebenszyklus-Informationen
