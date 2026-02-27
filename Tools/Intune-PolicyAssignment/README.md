@@ -48,7 +48,7 @@ Dieses Szenario ist besonders kritisch, wenn das Onboarding auf
   einen vom Admin in Entra ID generierten **Temporary Access Pass (TAP)**
   als Passwort- und MFA-Ersatz.
 - Der TAP hat eine begrenzte Gültigkeitsdauer und ist für einen einmaligen
-  Gebrauch ausgelegt.
+  Gebrauch ausgelegt, beziehungsweise kann in der klassischen Windows Anmeldung nicht verwendet werden.
 - Der unerwartete Reboot in der Device Phase **unterbricht den WHfB-Setup-Flow**.
   Der Benutzer muss sich erneut authentifizieren – oft ist der TAP aber bereits
   verbraucht oder abgelaufen.
