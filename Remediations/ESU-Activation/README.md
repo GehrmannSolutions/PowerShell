@@ -49,7 +49,7 @@ Der ESU MAK-Key muss ueber ein Intune Custom Configuration Profile (OMA-URI) in 
 | Einstellung | Wert |
 |---|---|
 | Name | `ESU MAK-Key` |
-| OMA-URI | `./Device/Vendor/MSFT/Registry/HKLM\SOFTWARE\BusinessITSolutions\ESU/MakKey` |
+| OMA-URI | `./Device/Vendor/MSFT/Registry/HKLM/SOFTWARE/BusinessITSolutions/ESU/MakKey` |
 | Datentyp | `Zeichenfolge` |
 | Wert | `XXXXX-XXXXX-XXXXX-XXXXX-XXXXX` (Ihr ESU MAK-Key) |
 
