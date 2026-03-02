@@ -16,17 +16,17 @@ Während eines Windows Autopilot-Deployments durchläuft das Gerät den
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │  DEVICE SETUP PHASE                                             │
-│  (läuft vor dem User Login, als SYSTEM)                        │
+│  (läuft vor dem User Login, als SYSTEM)                         │
 │                                                                 │
-│  → Hier greifen: All Devices Zuweisungen                       │
-│  → MDM-Policies werden angewendet                              │
-│  → Reboot-Risiko: HOCH                                         │
+│  → Hier greifen: All Devices Zuweisungen                        │
+│  → MDM-Policies werden angewendet                               │
+│  → Reboot-Risiko: HOCH                                          │
 ├─────────────────────────────────────────────────────────────────┤
 │  ACCOUNT SETUP PHASE                                            │
-│  (läuft nach dem User Login)                                   │
+│  (läuft nach dem User Login)                                    │
 │                                                                 │
-│  → Hier greifen: All Users Zuweisungen                         │
-│  → Reboot-Risiko: GERING (User ist bereits angemeldet)         │
+│  → Hier greifen: All Users Zuweisungen                          │
+│  → Reboot-Risiko: GERING (User ist bereits angemeldet)          │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -381,13 +381,13 @@ RebootRequired-Problem ergibt sich folgende Empfehlung:
 ```
 ┌────────────────────────────────────────────────────────────────────┐
 │  Policy muss vor User-Login aktiv sein?                            │
-│  (BitLocker, Netzwerk, BIOS)                                      │
+│  (BitLocker, Netzwerk, BIOS)                                       │
 │                                                                    │
-│   JA  → All Devices + Assignment Filter (ggf. Autopilot exclude) │
-│   NEIN → All Users  (greift erst in User Phase → kein Reboot)    │
+│   JA  → All Devices + Assignment Filter (ggf. Autopilot exclude)   │
+│   NEIN → All Users  (greift erst in User Phase → kein Reboot)      │
 ├────────────────────────────────────────────────────────────────────┤
-│  Niemals: Dynamische Gerätegruppen als Exclude in Autopilot-      │
-│  Szenarien → Latenz führt zu ungewollten Deployments!             │
+│  Niemals: Dynamische Gerätegruppen als Exclude in Autopilot-       │
+│  Szenarien → Latenz führt zu ungewollten Deployments!              │
 │  Stattdessen: Assignment Filter nutzen                             │
 └────────────────────────────────────────────────────────────────────┘
 ```
