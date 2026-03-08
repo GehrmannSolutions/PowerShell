@@ -20,7 +20,13 @@
 
 .RELEASE NOTES
     V1.0, 26.02.2026 - Erstversion
+    V1.1, 04.03.2026 - Registry-Key wird automatisch angelegt damit OMA-URI greift (stufenweise)
+    V1.2, 08.03.2026 - MAK-Key direkt als Variable (Registry CSP deprecated, OMA-URI nicht unterstuetzt)
 #>
+
+# === KONFIGURATION - MAK-Key hier eintragen ===
+$makKey = "XXXXX-XXXXX-XXXXX-XXXXX-XXXXX"
+# ==============================================
 
 $registryPath = "HKLM:\SOFTWARE\BusinessITSolutions\ESU"
 
@@ -207,16 +213,15 @@ try {
         exit 1
     }
 
-    # --- MAK-Key aus Registry lesen ---
-    $makKey = $null
-    if (Test-Path $registryPath) {
-        $makKey = (Get-ItemProperty -Path $registryPath -Name "MakKey" -ErrorAction SilentlyContinue).MakKey
-    }
-
-    if ([string]::IsNullOrWhiteSpace($makKey)) {
-        Write-Host "ESU MAK-Key nicht in Registry vorhanden ($registryPath\MakKey). Bitte per Intune OMA-URI bereitstellen."
+    # --- MAK-Key pruefen ---
+    if ([string]::IsNullOrWhiteSpace($makKey) -or $makKey -eq "XXXXX-XXXXX-XXXXX-XXXXX-XXXXX") {
+        Write-Host "MAK-Key nicht eingetragen. Bitte Skript vor dem Upload in Intune anpassen."
         exit 1
     }
+
+    # --- Registry-Pfad fuer Phase-Flags sicherstellen ---
+    New-Item -Path "HKLM:\SOFTWARE\BusinessITSolutions" -Force | Out-Null
+    New-Item -Path $registryPath -Force | Out-Null
 
     # --- Aktuelle Phase ermitteln ---
     $currentPhase = Get-ESUPhase

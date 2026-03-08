@@ -14,7 +14,7 @@ Deckt den kompletten Prozess ab:
 | Datei | Zweck |
 |---|---|
 | `Detect-ESUActivation.ps1` | Prueft ob ESU aktiviert werden muss |
-| `Remediate-ESUActivation.ps1` | Installiert KBs und aktiviert ESU |
+| `Remediate-ESUActivation.ps1` | Installiert KBs und aktiviert ESU (MAK-Key als Variable oben im Skript) |
 
 ## Mehrstufiger Ablauf (Phasen)
 
@@ -35,33 +35,28 @@ Die Remediation nutzt Registry-Flags unter `HKLM:\SOFTWARE\BusinessITSolutions\E
 | ESU bereits lizenziert | 0 | Keine |
 | Phase 1 (Neustart ausstehend) | 0 | Warte auf Neustart |
 | KBs fehlen | 1 | Remediation |
-| MAK-Key fehlt | 1 | Remediation (meldet Fehler) |
 | ESU nicht aktiv | 1 | Remediation |
 
 ## Voraussetzungen
 
-### 1. MAK-Key per Intune bereitstellen
+### 1. MAK-Key ins Skript eintragen
 
-Der ESU MAK-Key muss ueber ein Intune Custom Configuration Profile (OMA-URI) in die Registry geschrieben werden:
-
-**Intune > Geraete > Konfiguration > Erstellen > Windows 10 und hoeher > Benutzerdefiniert**
-
-| Einstellung | Wert |
-|---|---|
-| Name | `ESU MAK-Key` |
-| OMA-URI | `./Device/Vendor/MSFT/Registry/HKLM/SOFTWARE/BusinessITSolutions/ESU/MakKey` |
-| Datentyp | `Zeichenfolge` |
-| Wert | `XXXXX-XXXXX-XXXXX-XXXXX-XXXXX` (Ihr ESU MAK-Key) |
-
-**Alternativ:** PowerShell-Skript als Intune Platform Script:
+Den ESU MAK-Key **vor dem Upload in Intune** oben im Remediation-Skript eintragen:
 
 ```powershell
-$registryPath = "HKLM:\SOFTWARE\BusinessITSolutions\ESU"
-if (-not (Test-Path $registryPath)) {
-    New-Item -Path $registryPath -Force | Out-Null
-}
-Set-ItemProperty -Path $registryPath -Name "MakKey" -Value "XXXXX-XXXXX-XXXXX-XXXXX-XXXXX" -Type String -Force
+# === KONFIGURATION - MAK-Key hier eintragen ===
+$makKey = "XXXXX-XXXXX-XXXXX-XXXXX-XXXXX"
+# ==============================================
 ```
+
+**Sicherheit:** Das Skript liegt in Intune und ist durch RBAC geschuetzt. Nur Nutzer mit der Intune-Admin-Rolle koennen es einsehen - identisches Schutzniveau wie jede andere Konfiguration in Intune.
+
+> **Warum nicht per OMA-URI Custom Policy?**
+> Der Intune Registry CSP (`./Device/Vendor/MSFT/Registry/...`) ist **deprecated** und unterstuetzt keine
+> beliebigen Pfade unter `HKLM\SOFTWARE\`. Er funktioniert ausschliesslich mit Pfaden unter
+> `SOFTWARE\Policies\` die von einem definierten CSP verwaltet werden. Microsoft bestaetigt dies
+> explizit: *"I didn't find articles describing setting an arbitrary registry key via CSP."*
+> Quelle: [Microsoft Q&A - Arbitrary Policy and general Registry keys via Intune](https://learn.microsoft.com/en-gb/answers/questions/1805419/arbitrary-policy-and-general-registry-keys-via-int)
 
 ### 2. MAK-Key beschaffen
 
@@ -82,14 +77,15 @@ Falls die automatische Installation fehlschlaegt, erhaelt der Benutzer eine Toas
 
 ## Intune-Konfiguration
 
-1. **Endpunktanalyse** > **Proaktive Wartung** > **Skriptpaket erstellen**
-2. Detection-Skript: `Detect-ESUActivation.ps1`
-3. Remediation-Skript: `Remediate-ESUActivation.ps1`
-4. Einstellungen:
+1. MAK-Key in `Remediate-ESUActivation.ps1` eintragen (siehe Abschnitt Voraussetzungen)
+2. **Endpunktanalyse** > **Proaktive Wartung** > **Skriptpaket erstellen**
+3. Detection-Skript: `Detect-ESUActivation.ps1`
+4. Remediation-Skript: `Remediate-ESUActivation.ps1` (mit eingetragenem MAK-Key)
+5. Einstellungen:
    - Skript im 64-Bit-PowerShell ausfuehren: **Ja**
    - Skript mit angemeldeten Anmeldeinformationen ausfuehren: **Nein** (SYSTEM-Kontext)
-5. Zeitplan: **Taeglich** (fuer Phase-Erkennung nach Neustart)
-6. Zuweisung: Windows 10 Geraetegruppe
+6. Zeitplan: **Taeglich** (fuer Phase-Erkennung nach Neustart)
+7. Zuweisung: Windows 10 Geraetegruppe
 
 ## Benutzer-Benachrichtigung
 
