@@ -1,4 +1,3 @@
 *.html
 *.log
-*.gitattributes
-*.gitignore
+*.csv
