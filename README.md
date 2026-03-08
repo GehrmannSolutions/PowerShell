@@ -7,6 +7,9 @@ Zentrale Sammlung von PowerShell-Skripten und Tools fuer die Administration von 
 ```
 PowerShell/
 ├── Intune-DriverInjection/                       Druckertreiber-Deployment via Intune
+├── Plattform-Scripts/
+│   ├── Cisco Secure Client/                      VPN-Profil nach Installation setzen (Patch My PC)
+│   └── Rename-PDF24Printer/                      PDF24-Drucker nach Installation umbenennen (Patch My PC)
 ├── Remediations/
 │   ├── BitLocker-Decrypt/                        BitLocker-Entschluesselung per Intune Remediation
 │   └── ESU-Activation/                           Windows 10 ESU-Aktivierung per Intune Remediation
@@ -102,6 +105,28 @@ Prueft in einem Durchlauf:
 
 ---
 
+### [Cisco Secure Client](Plattform-Scripts/Cisco%20Secure%20Client/)
+
+Patch My PC Post-Installations-Script, das nach der Installation von Cisco Secure Client
+das VPN-Verbindungsprofil (Hostname) setzt und den VPN-Agentendienst neu startet,
+damit das Profil sofort in der Oberflaeche erscheint.
+
+| Skript | Funktion |
+|---|---|
+| `Set-CiscoSecureClientVpnProfile.ps1` | Erstellt die Profil-XML und startet `csc_vpnagent` neu |
+
+**Einsatz:** Patch My PC > Cisco Secure Client > Post-Installation Script > SYSTEM-Kontext
+
+---
+
+### [Rename-PDF24Printer](Plattform-Scripts/Rename-PDF24Printer/)
+
+Patch My PC Post-Installations-Script, das den von PDF24 Creator installierten virtuellen Drucker (`PDF24`) direkt nach der Installation in `FreePDF` umbenennt.
+
+**Einsatz:** Patch My PC > PDF24 Creator > Post-Installation Script > SYSTEM-Kontext
+
+---
+
 ### [SharePoint-OneDriveManagerAccess](Tools/SharePoint-OneDriveManagerAccess/)
 
 Gibt einem Manager Site-Collection-Admin-Zugriff auf die OneDrive-Site eines Benutzers (z.B. nach Austritt eines Mitarbeiters).
@@ -125,6 +150,8 @@ Gibt einem Manager Site-Collection-Admin-Zugriff auf die OneDrive-Site eines Ben
 | Intune-DriverInjection | 5.1+ | SYSTEM (via Intune) | Keine |
 | BitLocker-Decrypt | 5.1+ | SYSTEM (via Intune) | Keine |
 | ESU-Activation | 5.1+ | SYSTEM (via Intune) | BurntToast (auto-installiert), slmgr.vbs |
+| Cisco Secure Client | 5.1+ | SYSTEM (via Patch My PC) | Keine |
+| Rename-PDF24Printer | 5.1+ | SYSTEM (via Patch My PC) | Keine |
 | Intune-PolicyAssignment | 7+ | Intune Admin | Microsoft.Graph.Authentication |
 | M365-AccessReview | 5.1+ (Admin) | Global Admin | Microsoft.Graph, MicrosoftTeams |
 | SharePoint-OneDriveManagerAccess | **5.1 (ISE)** | SharePoint Admin | Microsoft.Online.SharePoint.PowerShell |
